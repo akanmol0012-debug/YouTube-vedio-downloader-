@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader - Download Videos & MP3</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            color: #ff4444;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 18px 20px 18px 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            border-color: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.2);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #ff4444, #ff6b6b);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 68, 68, 0.4);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .formats {
+            display: none;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .format-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .format-option:hover {
+            border-color: #ff4444;
+            transform: translateX(5px);
+        }
+
+        .format-option.active {
+            border-color: #ff4444;
+            background: linear-gradient(45deg, #ff4444, #ff6b6b);
+            color: white;
+        }
+
+        .format-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .format-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .format-details {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .download-final {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .download-final:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff4444;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .supported-sites {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+            border-left: 4px solid #dc3545;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <i class="fas fa-download"></i>
+        </div>
+        <h1>Video Downloader</h1>
+        
+        <div class="error" id="errorMsg"></div>
+        
+        <div class="input-group">
+            <i class="fas fa-link input-icon"></i>
+            <input type="url" id="videoUrl" class="url-input" placeholder="Paste YouTube, Instagram, Facebook video link here...">
+        </div>
+        
+        <button class="download-btn" onclick="analyzeUrl()">
+            <i class="fas fa-search"></i> Analyze & Get Download Links
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing video...</p>
+        </div>
+        
+        <div class="formats" id="formats">
+            <h3 style="margin-bottom: 20px; color: #333;">Choose Format:</h3>
+            <div class="format-option" data-type="mp4" data-quality="720p">
+                <div class="format-info">
+                    <div class="format-title">MP4 Video (720p)</div>
+                    <div class="format-details">High quality video</div>
+                </div>
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="format-option" data-type="mp4" data-quality="480p">
+                <div class="format-info">
+                    <div class="format-title">MP4 Video (480p)</div>
+                    <div class="format-details">Standard quality</div>
+                </div>
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="format-option" data-type="mp3" data-quality="320kbps">
+                <div class="format-info">
+                    <div class="format-title">MP3 Audio (320kbps)</div>
+                    <div class="format-details">High quality audio</div>
+                </div>
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="format-option" data-type="mp3" data-quality="128kbps">
+                <div class="format-info">
+                    <div class="format-title">MP3 Audio (128kbps)</div>
+                    <div class="format-details">Smaller file size</div>
+                </div>
+                <i class="fas fa-music"></i>
+            </div>
+            <button class="download-final" onclick="startDownload()">
+                <i class="fas fa-download"></i> Download Now
+            </button>
+        </div>
+        
+        <div class="supported-sites">
+            <strong>Supported:</strong> YouTube, Instagram, Facebook, TikTok, Twitter, Vimeo, Dailymotion
+        </div>
+    </div>
+
+    <script>
+        let selectedFormat = null;
+        let videoTitle = 'Video Title';
+        let videoThumbnail = '';
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function analyzeUrl() {
+            const url = document.getElementById('videoUrl').value.trim();
+            
+            if (!url) {
+                showError('Please paste a video URL first!');
+                return;
+            }
+
+            // Check if it's a valid URL
+            try {
+                new URL(url);
+            } catch {
+                showError('Please enter a valid URL!');
+                return;
+            }
+
+            // Hide error and show loading
+            document.getElementById('errorMsg').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.querySelector('.download-btn').disabled = true;
+
+            // Simulate API call delay
+            setTimeout(() => {
+                // Check supported platforms
+                if (isSupportedPlatform(url)) {
+                    simulateVideoAnalysis();
+                } else {
+                    document.getElementById('loading').style.display = 'none';
+                    document.querySelector('.download-btn').disabled = false;
+                    showError('Sorry, this platform is not supported yet!');
+                }
+            }, 2000);
+        }
+
+        function isSupportedPlatform(url) {
+            const supported = [
+                'youtube.com', 'youtu.be', 'instagram.com', 'facebook.com',
+                'tiktok.com', 'twitter.com', 'vimeo.com', 'dailymotion.com'
+            ];
+            return supported.some(platform => url.includes(platform));
+        }
+
+        function simulateVideoAnalysis() {
+            // Simulate getting video info
+            videoTitle = "Sample Video Title - Downloaded from YouTube";
+            videoThumbnail = "https://via.placeholder.com/320x180/ff4444/ffffff?text=VIDEO";
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('formats').style.display = 'block';
+            document.querySelector('.download-btn').disabled = false;
+            document.querySelector('.download-btn').textContent = 'Analyze Another Video';
+        }
+
+        // Format selection
+        document.querySelectorAll('.format-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                selectedFormat = {
+                    type: this.dataset.type,
+                    quality: this.dataset.quality
+                };
+                document.querySelector('.download-final').style.display = 'block';
+            });
+        });
+
+        function startDownload() {
+            if (!selectedFormat) {
+                showError('Please select a format first!');
+                return;
+            }
+
+            // Create fake download link (in real implementation, this would call your backend API)
+            const downloadUrl = generateDownloadUrl();
+            
+            // Trigger download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `${videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${selectedFormat.type}`;
+            link.click();
+
+            // Show success message
+            showError(`Download started! ${selectedFormat.type.toUpperCase()} - ${selectedFormat.quality}`);
+        }
+
+        function generateDownloadUrl() {
+            // In a real implementation, this would be your backend API endpoint
+            // return `/api/download?url=${encodeURIComponent(originalUrl)}&format=${selectedFormat.type}&quality=${selectedFormat.quality}`;
+            
+            // For demo purposes
+            return `https://example.com/download/demo.${selectedFormat.type}`;
+        }
+
+        // Enter key support
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeUrl();
+            }
+        });
+
+        // Auto-focus input
+        document.getElementById('videoUrl').focus();
+    </script>
+</body>
+</html>
